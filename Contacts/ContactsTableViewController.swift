@@ -40,6 +40,20 @@ class ContactsTableViewController: UITableViewController {
         cell.textLabel?.text = contacts.name
         return cell
     }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let contact = ContactController.shared.contacts[indexPath.row]
+            ContactController.shared.delete(contact: contact) { (success) in
+                if success {
+                    DispatchQueue.main.async {
+                        ContactController.shared.contacts.remove(at: indexPath.row)
+                        tableView.deleteRows(at: [indexPath], with: .automatic)
+                    }
+                }
+            }
+        }
+    }
 
     // MARK: - Navigation
 

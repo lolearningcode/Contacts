@@ -12,7 +12,7 @@ import CloudKit
 class ContactController {
     static let shared = ContactController()
     var contacts: [Contact] = []
-    let privateDB = CKContainer.default().publicCloudDatabase
+    let publicDB = CKContainer.default().publicCloudDatabase
     
     func createContactWith(name: String, phoneNumber: String, emailAddress: String, completion: @escaping (Bool) -> Void) {
         let contact = Contact(name: name, phoneNumber: phoneNumber, emailAddress: emailAddress)
@@ -21,7 +21,7 @@ class ContactController {
     
     func saveContact(contact: Contact, completion: @escaping (Bool) -> ()) {
         let contactRecord = CKRecord(contact: contact)
-        privateDB.save(contactRecord) { (record, error) in
+        publicDB.save(contactRecord) { (record, error) in
             if let error = error {
                 print("Error saving: \(error.localizedDescription)")
                 completion(false)
@@ -40,7 +40,7 @@ class ContactController {
         
         let query = CKQuery(recordType: Constants.recordKey, predicate: predicate)
         
-        privateDB.perform(query, inZoneWith: nil) { (records, error) in
+        publicDB.perform(query, inZoneWith: nil) { (records, error) in
             if let error = error {
                 print("Error fetching: \(error.localizedDescription)")
                 completion(false)
@@ -60,6 +60,25 @@ class ContactController {
         contact.emailAddress = emailAddress
         
         let record = CKRecord(contact: contact)
-        let operation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: )
+        let operation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
+        operation.savePolicy = .changedKeys
+        operation.queuePriority = .high
+        operation.qualityOfService = .userInitiated
+        operation.completionBlock = {
+            completion(true)
+        }
+        publicDB.add(operation)
+    }
+    
+    func delete(contact: Contact, completion: @escaping (Bool) -> Void) {
+        publicDB.delete(withRecordID: contact.recordID) { (_, error) in
+            if let error = error {
+                print("Error deleting record: \(error.localizedDescription)")
+                completion(false)
+                return
+            }
+            completion(true)
+        }
     }
 }
+

@@ -18,6 +18,7 @@ class ContactDetailViewController: UIViewController {
         didSet {
             loadViewIfNeeded()
             updateViews()
+
         }
     }
     
@@ -43,5 +44,6 @@ class ContactDetailViewController: UIViewController {
         nameTextField.text = contact.name
         phoneNumberTextField.text = contact.phoneNumber
         emailAddressTextField.text = contact.emailAddress
+        
     }
 }
